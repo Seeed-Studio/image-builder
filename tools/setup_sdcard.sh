@@ -979,6 +979,15 @@ kernel_detection () {
 		has_ti_kernel="enable"
 	fi
 
+	unset has_stm32_kernel
+	unset check
+	check=$(ls "${dir_check}" | grep vmlinuz- | grep stm32 | head -n 1)
+	if [ "x${check}" != "x" ] ; then
+		stm32_dt_kernel=$(ls "${dir_check}" | grep vmlinuz- | grep stm32 | head -n 1 | awk -F'vmlinuz-' '{print $2}')
+		echo "Debug: image has: v${stm32_dt_kernel}"
+		has_stm32_kernel="enable"
+	fi
+
 	unset has_xenomai_kernel
 	unset check
 	check=$(ls "${dir_check}" | grep vmlinuz- | grep xenomai | head -n 1)
@@ -1035,6 +1044,12 @@ kernel_select () {
 		fi
 	fi
 
+	if [ "x${conf_kernel}" = "xstm32" ] ; then
+		if [ "x${has_stm32_kernel}" = "xenable" ] ; then
+			select_kernel="${stm32_dt_kernel}"
+		fi
+	fi
+
 	if [ "${select_kernel}" ] ; then
 		echo "Debug: using: v${select_kernel}"
 	else
@@ -1065,6 +1080,18 @@ populate_rootfs () {
 		if ! mount -t ${ROOTFS_TYPE} ${media_prefix}${media_rootfs_partition} ${TEMPDIR}/disk; then
 			echo "-----------------------------"
 			echo "Unable to mount ${media_prefix}${media_rootfs_partition} at ${TEMPDIR}/disk to complete populating rootfs Partition"
+			echo "Please retry running the script, sometimes rebooting your system helps."
+			echo "-----------------------------"
+			exit
+		fi
+	fi
+
+	# /boot has it's own partition
+	if [ ! "x${media_boot_partition}" = "x${media_rootfs_partition}" ] ; then
+		mkdir ${TEMPDIR}/disk/boot || true
+		if ! mount -t ${mount_partition_format} ${media_prefix}${media_boot_partition} ${TEMPDIR}/disk/boot; then
+			echo "-----------------------------"
+			echo "Unable to mount ${media_prefix}${media_boot_partition} at ${TEMPDIR}/disk/boot"
 			echo "Please retry running the script, sometimes rebooting your system helps."
 			echo "-----------------------------"
 			exit
@@ -1640,6 +1667,10 @@ populate_rootfs () {
 	sync
 	sync
 	cd "${DIR}/"
+
+	if [ ! "x${media_boot_partition}" = "x${media_rootfs_partition}" ] ; then
+		umount ${TEMPDIR}/disk/boot || true
+	fi
 
 	if [ "x${option_ro_root}" = "xenable" ] ; then
 		umount ${TEMPDIR}/disk/var || true
