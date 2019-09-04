@@ -12,7 +12,12 @@
 #  ORGANIZATION: STMicroelectronics
 #     COPYRIGHT: Copyright (C) 2017, STMicroelectronics - All Rights Reserved
 #       CREATED: 11/22/2017 15:03
-#      REVISION:  ---
+#      REVISION: v1.0
+#
+#   DESCRIPTION: adapt to call from setup_sdcard.sh
+#        AUTHOR: Peter Yang (turmary@126.com)
+#  ORGANIZATION: Seeed Studio Co.,Ltd.
+#      REVISION: v1.1
 #===============================================================================
 #TODO: Pre-requisite tools
 # sgdisk
@@ -147,6 +152,7 @@ function get_last_image_path() {
 			case "$selected" in
 			1|P)
 				last_image=$bin2flash
+				break
 				;;
 			*)
 				;;
@@ -154,24 +160,24 @@ function get_last_image_path() {
 		fi
 		i=$(($i+1))
 	done
-	if [ -n $last_image ];
-	then
-		if [ -f $FLASHLAYOUT_filename_path/$last_image ];
-		then
+
+	if [ -n $last_image ]; then
+		if   [ -f $FLASHLAYOUT_prefix_image_path/$last_image ]; then
+			return 0
+		elif [ -f $FLASHLAYOUT_filename_path/$last_image ]; then
 			FLASHLAYOUT_prefix_image_path="$FLASHLAYOUT_filename_path"
+		elif [ -f $FLASHLAYOUT_filename_path/../$last_image ]; then
+			FLASHLAYOUT_prefix_image_path="$FLASHLAYOUT_filename_path/.."
 		else
-			if [ -f $FLASHLAYOUT_filename_path/../$last_image ];
-			then
-				FLASHLAYOUT_prefix_image_path="$FLASHLAYOUT_filename_path/.."
-			else
-				echo "[ERROR]: do not found image associated to this FLash layout on the directory:"
-				echo "[ERROR]:    $FLASHLAYOUT_filename_path"
-				echo "[ERROR]: or $FLASHLAYOUT_filename_path/.."
-				echo ""
-				exit 0
-			fi
+			echo "[ERROR]: do not found image associated to this FLash layout on the directory:"
+			echo "[ERROR]:    $FLASHLAYOUT_filename_path"
+			echo "[ERROR]: or $FLASHLAYOUT_filename_path/.."
+			echo "[ERROR]: image --- $last_image"
+			echo ""
+			return 1
 		fi
 	fi
+	return 0
 }
 
 # -------------------------------
@@ -315,15 +321,15 @@ function generate_gpt_partition_table_from_flash_layout() {
 					echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 					echo "[ERROR]: The rootfs and/or other partitions doesn't enter on a SDCARD size of $DEFAULT_RAW_SIZE MB"
 					echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-					exit 1
+					return 1
 				fi
 			fi
 			next_offset=$((2 * $next_offset_b / 1024))
 			next_offset=$(($next_offset -1))
 			if [ $next_offset -eq -1 ];
 			then
-			next_offset=" "
-			next_offset_b="0"
+				next_offset=" "
+				next_offset_b="0"
 			fi
 		else
 			next_offset=" "
@@ -377,7 +383,7 @@ function generate_gpt_partition_table_from_flash_layout() {
 							echo "[ERROR]: IMAGE TOO BIG [$partName:$bin2flash $image_size_in_mb MB [requested $partition_size B]"
 							echo "[ERROR]: IMAGE + OFFSET of rootfs partition are superior of SDCARD size ($DEFAULT_RAW_SIZE)"
 							echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-							exit 1
+							return 1
 						fi
 						next_offset=$((2 * $new_next_partition_offset_b / 1024))
 						next_offset=$(($next_offset -1))
@@ -385,7 +391,7 @@ function generate_gpt_partition_table_from_flash_layout() {
 						echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
 						echo "[ERROR]: IMAGE TOO BIG [$partName:$bin2flash $image_size_in_mb MB [requested $partition_size B]"
 						echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-						exit 1
+						return 1
 					fi
 				fi
 
@@ -399,7 +405,7 @@ function generate_gpt_partition_table_from_flash_layout() {
 						echo "[ERROR]: IMAGE TOO BIG [$partName:$bin2flash $image_size_in_mb MB]"
 						echo "[ERROR]: There is not enough place on last partition($partName)"
 						echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-						exit 1
+						return 1
 					fi
 				fi
 
@@ -409,7 +415,7 @@ function generate_gpt_partition_table_from_flash_layout() {
 				partition_size_type=$(sgdisk -p $FLASHLAYOUT_rawname | grep $partName | awk '{ print $5}')
 				printf "\r[CREATED] part %d: %8s [partition size %s %s]\n" $j "$partName"  "$partition_size" "$partition_size_type"
 
-			j=$(($j+1))
+				: $(( j++ ))
 			fi
 		fi
 		p=$(($p+1))
@@ -470,12 +476,12 @@ function populate_gpt_partition_table_from_flash_layout() {
 					echo "   [WARNING]: THE PARTITION $partName ARE NOT FILL."
 					WARNING_TEXT+="[WARNING]: THE PARTITION $partName ARE NOT FILL (file $FLASHLAYOUT_prefix_image_path/$bin2flash are not present) #"
 				fi
-				j=$(($j+1))
+				: $(( j++ ))
 			else
 				if [ "$selected" == "E" ];
 				then
 					printf "\r[UNFILLED] part %d: %8s, \n" $j "$partName"
-					j=$(($j+1))
+					: $(( j++ ))
 				fi
 			fi
 
@@ -485,124 +491,80 @@ function populate_gpt_partition_table_from_flash_layout() {
 
 # ----------------------------------------
 # ----------------------------------------
+function _print_shema_lines() {
+	local i fmt
+	fmt="$1"
+
+	for (( i=0; i<FLASHLAYOUT_number_of_line; i++)); do
+		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
+		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
+		if [ "$ip" == "$SDCARD_TOKEN" ]; then
+			if [ "$selected" == "P" ] || [ "$selected" == "E" ]; then
+				echo -n "$fmt" >> $FLASHLAYOUT_infoname
+			fi
+		fi
+	done
+	echo "${fmt:0:1}" >> $FLASHLAYOUT_infoname
+	return
+}
+
 function print_shema_on_infofile() {
 	local j=1
 	local i=1
+
 	# print schema of partition
-	i=1
-	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
-	do
-		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
-		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				echo -n "=============" >> $FLASHLAYOUT_infoname
-			fi
-		fi
-	done
-	echo "=" >> $FLASHLAYOUT_infoname
+	_print_shema_lines "============="
 
 	#empty line
-	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
-	do
-		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
-		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				echo -n "=            " >> $FLASHLAYOUT_infoname
-			fi
-		fi
-	done
-	echo "=" >> $FLASHLAYOUT_infoname
+	_print_shema_lines "|            "
+
 	# part name
-	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
-	do
+	for ((i=0;i<FLASHLAYOUT_number_of_line;i++)); do
 		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
 		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
 		partName=${FLASHLAYOUT_data[$i,$COL_PARTNAME]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				printf "=  %08s  " "$partName" >> $FLASHLAYOUT_infoname
+		if [ "$ip" == "$SDCARD_TOKEN" ]; then
+			if [ "$selected" == "P" ] || [ "$selected" == "E" ]; then
+				printf "|  %08s  " "$partName" >> $FLASHLAYOUT_infoname
 			fi
 		fi
 	done
-	echo "=" >> $FLASHLAYOUT_infoname
+	echo "|" >> $FLASHLAYOUT_infoname
+
 	#empty
-	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
-	do
-		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
-		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				echo -n "=            " >> $FLASHLAYOUT_infoname
-			fi
-		fi
-	done
-	echo "=" >> $FLASHLAYOUT_infoname
+	_print_shema_lines "|            "
+
 	# partition number
 	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
 	do
 		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
 		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				printf "= %08s%-2d " "mmcblk0p" $j>> $FLASHLAYOUT_infoname
-				j=$(($j+1))
+		if [ "$ip" == "$SDCARD_TOKEN" ]; then
+			if [ "$selected" == "P" ] || [ "$selected" == "E" ]; then
+				printf "| %08s%-2d " "mmcblk0p" $j>> $FLASHLAYOUT_infoname
+				: $(( j++ ))
 			fi
 		fi
 	done
-	echo "=" >> $FLASHLAYOUT_infoname
+	echo "|" >> $FLASHLAYOUT_infoname
 	j=1
 	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
 	do
 		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
 		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				printf "=    (%-2d)    " $j>> $FLASHLAYOUT_infoname
-				j=$(($j+1))
+		if [ "$ip" == "$SDCARD_TOKEN" ]; then
+			if [ "$selected" == "P" ] || [ "$selected" == "E" ]; then
+				printf "|    (%-2d)    " $j>> $FLASHLAYOUT_infoname
+				: $(( j++ ))
 			fi
 		fi
 	done
-	echo "=" >> $FLASHLAYOUT_infoname
-	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
-	do
-		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
-		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				echo -n "=            " >> $FLASHLAYOUT_infoname
-			fi
-		fi
-	done
-	echo "=" >> $FLASHLAYOUT_infoname
-	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
-	do
-		selected=${FLASHLAYOUT_data[$i,$COL_SELECTED_OPT]}
-		ip=${FLASHLAYOUT_data[$i,$COL_IP]}
-		if [ "$ip" == "$SDCARD_TOKEN" ];
-		then
-			if [ "$selected" == "P" ] || [ "$selected" == "E" ];
-			then
-				echo -n "=============" >> $FLASHLAYOUT_infoname
-			fi
-		fi
-	done
-	echo "=" >> $FLASHLAYOUT_infoname
+	echo "|" >> $FLASHLAYOUT_infoname
+
+	#empty
+	_print_shema_lines "|            "
+	_print_shema_lines "============="
+
 	# print legend of partition
 	j=1
 	for ((i=0;i<FLASHLAYOUT_number_of_line;i++))
@@ -624,7 +586,7 @@ function print_shema_on_infofile() {
 				else
 					echo "    Image:" >> $FLASHLAYOUT_infoname
 				fi
-				j=$(($j+1))
+				: $(( j++ ))
 			fi
 		fi
 	done
@@ -645,7 +607,7 @@ function print_populate_on_infofile() {
 				echo "- Populate partition $partName (/dev/mmcblk0p$j)" >> $FLASHLAYOUT_infoname
 				echo "    dd if=$bin2flash of=/dev/mmcblk0p$j bs=1M conv=fdatasync status=progress" >> $FLASHLAYOUT_infoname
 				echo "" >> $FLASHLAYOUT_infoname
-				j=$(($j+1))
+				: $(( j++ ))
 			fi
 			if [ "$selected" == "E" ];
 			then
@@ -657,7 +619,7 @@ function print_populate_on_infofile() {
 					echo "    dd if=<raw image of $partName> of=/dev/mmcblk0p$j bs=1M conv=fdatasync status=progress" >> $FLASHLAYOUT_infoname
 				fi
 				echo "" >> $FLASHLAYOUT_infoname
-				j=$(($j+1))
+				: $(( j++ ))
 			fi
 		fi
 	done
@@ -747,6 +709,7 @@ function print_warning() {
 	fi
 }
 
+: <<-\EOF
 function usage() {
 	echo ""
 	echo "Help:"
@@ -754,6 +717,7 @@ function usage() {
 	echo ""
 	exit 1
 }
+
 # ------------------
 #        Main
 # ------------------
@@ -766,8 +730,7 @@ then
 else
 	FLASHLAYOUT_filename=$1
 	FLASHLAYOUT_filename_path=$(dirname $FLASHLAYOUT_filename)
-	FLASHLAYOUT_filename_name=$(basename $FLASHLAYOUT_filename)
-	FLASHLAYOUT_dirname=$(basename $FLASHLAYOUT_filename_path)
+	_layout_dirname=$(basename $FLASHLAYOUT_filename_path)
 
 	_extension="${FLASHLAYOUT_filename##*.}"
 	if [ ! "$_extension" == "tsv" ];
@@ -779,10 +742,11 @@ else
 	fi
 	# File have a correct extension
 	#
-	if echo $FLASHLAYOUT_dirname | grep -q flashlayout
+	if echo $_layout_dirname | grep -q flashlayout
 	then
+		_layout_basename=$(basename $FLASHLAYOUT_filename)
 		# add directory name as prefix for raw image
-		new_filename=$(echo "$FLASHLAYOUT_dirname/$FLASHLAYOUT_filename_name" | sed -e "s|/|_|g")
+		new_filename=$(echo "$_layout_dirname/$_layout_basename" | sed -e "s|/|_|g")
 		filename_for_raw_to_use="$FLASHLAYOUT_filename_path/$new_filename"
 	else
 		filename_for_raw_to_use=$FLASHLAYOUT_filename
@@ -835,3 +799,37 @@ populate_gpt_partition_table_from_flash_layout
 create_info
 print_info
 print_warning
+EOF
+
+function usage() {
+	echo ""
+	echo "Help:"
+	echo "   $0 <device or image-file> <flash-layout (.tsv)> [image-path-prefix]"
+	echo ""
+	return 1
+}
+
+function flashlayout_and_bootloader() {
+	FLASHLAYOUT_rawname="$1"
+	FLASHLAYOUT_filename="$2"
+	FLASHLAYOUT_prefix_image_path="${3:-.}"
+
+	if [ -z "$FLASHLAYOUT_rawname" -o -z "$FLASHLAYOUT_filename" ]; then
+		usage
+		return $?
+	fi
+
+	FLASHLAYOUT_filename_path=$(dirname $FLASHLAYOUT_filename)
+
+	read_flash_layout
+	get_last_image_path
+	debug "DUMP FlashLayout name:      $FLASHLAYOUT_filename"
+	debug "DUMP FlashLayout dir path:  $FLASHLAYOUT_filename_path"
+	debug "DUMP images dir path:       $FLASHLAYOUT_prefix_image_path"
+	debug "DUMP RAW SDCARD image name: $FLASHLAYOUT_rawname"
+
+	generate_gpt_partition_table_from_flash_layout
+	populate_gpt_partition_table_from_flash_layout
+	return 0
+}
+

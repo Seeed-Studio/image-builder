@@ -205,7 +205,7 @@ dl_bootloader () {
 	${dl_quiet} --directory-prefix="${TEMPDIR}/dl/" ${conf_bl_http}/${conf_bl_listfile}
 
 	if [ ! -f ${TEMPDIR}/dl/${conf_bl_listfile} ] ; then
-		echo "error: can't connect to rcn-ee.net, retry in a few minutes..."
+		echo "error: can't connect to downloading site, retry in a few minutes..."
 		exit
 	fi
 
@@ -723,6 +723,15 @@ create_partitions () {
 				media_rootfs_partition=1
 			fi
 		fi
+		;;
+	part_spl_uboot_boot)
+		echo "Creating partition from layout table"
+		echo "Version: `LC_ALL=C sgdisk --version`"
+		echo "-----------------------------"
+		. ./create_sdcard_from_flashlayout.sh
+		flashlayout_and_bootloader ${media} ./hwpack/$flashlayout_tsv ${TEMPDIR}/dl
+		media_boot_partition=4
+		media_rootfs_partition=6
 		;;
 	*)
 		echo "Using sfdisk to create partition layout"
