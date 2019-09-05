@@ -469,6 +469,14 @@ fi
 
 if [ "${apt_proxy}" ] ; then
 	echo "Acquire::http::Proxy \"http://${apt_proxy}\";" > /tmp/apt.conf
+	# apt-cacher-ng doesn't proceed https connection
+	# echo "Acquire::https::Proxy \"false\";" >> /tmp/apt.conf
+	#
+	# or
+	#
+	# Add configuration
+	#   PassThroughPattern: ^.*:443$
+	# to /etc/apt-cacher-ng/acng.conf of proxy server
 	sudo mv /tmp/apt.conf "${tempdir}/etc/apt/apt.conf"
 fi
 
