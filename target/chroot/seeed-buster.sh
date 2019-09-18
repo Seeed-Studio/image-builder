@@ -22,9 +22,6 @@
 
 export LC_ALL=C
 
-u_boot_release="v2019.01"
-u_boot_release_x15="ti-2017.01"
-
 #contains: rfs_username, release_date
 if [ -f /etc/rcn-ee.conf ] ; then
 	. /etc/rcn-ee.conf
@@ -95,8 +92,10 @@ setup_system () {
 	fi
 
 	echo "" >> /etc/securetty
-	echo "#USB Gadget Serial Port" >> /etc/securetty
-	echo "ttyGS0" >> /etc/securetty
+	echo "# /etc/securetty: list of terminals on which root is allowed to login." >> /etc/securetty
+	echo "# See securetty(5) and login(1)." >> /etc/securetty
+	echo "" >> /etc/securetty
+	echo "ttySTM0" >> /etc/securetty
 }
 
 setup_desktop () {
@@ -156,57 +155,6 @@ setup_desktop () {
 }
 
 install_git_repos () {
-	if [ -f /usr/bin/make ] ; then
-		echo "Installing pip packages"
-		git_repo="https://github.com/adafruit/adafruit-beaglebone-io-python.git"
-		git_target_dir="/opt/source/adafruit-beaglebone-io-python"
-		git_clone
-		if [ -f ${git_target_dir}/.git/config ] ; then
-			cd ${git_target_dir}/
-			sed -i -e 's:4.1.0:3.4.0:g' setup.py
-			if [ -f /usr/bin/python2 ] ; then
-				python2 setup.py install || true
-			fi
-			if [ -f /usr/bin/python3 ] ; then
-				python3 setup.py install || true
-			fi
-		fi
-	fi
-
-	if [ -d /usr/local/lib/node_modules/bonescript ] ; then
-		if [ -d /etc/apache2/ ] ; then
-			#bone101 takes over port 80, so shove apache/etc to 8080:
-			if [ -f /etc/apache2/ports.conf ] ; then
-				sed -i -e 's:80:8080:g' /etc/apache2/ports.conf
-			fi
-			if [ -f /etc/apache2/sites-enabled/000-default ] ; then
-				sed -i -e 's:80:8080:g' /etc/apache2/sites-enabled/000-default
-			fi
-			if [ -f /etc/apache2/sites-enabled/000-default.conf ] ; then
-				sed -i -e 's:80:8080:g' /etc/apache2/sites-enabled/000-default.conf
-			fi
-			if [ -f /var/www/html/index.html ] ; then
-				rm -rf /var/www/html/index.html || true
-			fi
-		fi
-	fi
-
-	if [ -f /var/www/html/index.nginx-debian.html ] ; then
-		rm -rf /var/www/html/index.nginx-debian.html || true
-
-		if [ -d /opt/scripts/distro/buster/nginx/ ] ; then
-			cp -v /opt/scripts/distro/buster/nginx/default /etc/nginx/sites-available/default
-		fi
-	fi
-
-	git_repo="https://github.com/prpplague/Userspace-Arduino"
-	git_target_dir="/opt/source/Userspace-Arduino"
-	git_clone
-
-	git_repo="https://github.com/strahlex/BBIOConfig.git"
-	git_target_dir="/opt/source/BBIOConfig"
-	git_clone
-
 	git_repo="https://github.com/prpplague/fb-test-app.git"
 	git_target_dir="/opt/source/fb-test-app"
 	git_clone
@@ -218,91 +166,19 @@ install_git_repos () {
 		cd /
 	fi
 
-	#am335x-pru-package
-	if [ -f /usr/include/prussdrv.h ] ; then
-		git_repo="https://github.com/biocode3D/prufh.git"
-		git_target_dir="/opt/source/prufh"
-		git_clone
-		if [ -f ${git_target_dir}/.git/config ] ; then
-			cd ${git_target_dir}/
-			if [ -f /usr/bin/make ] ; then
-				make LIBDIR_APP_LOADER=/usr/lib/ INCDIR_APP_LOADER=/usr/include
-			fi
-			cd /
-		fi
-	fi
-
-	git_repo="https://github.com/rogerq/pru-software-support-package"
-	git_target_dir="/opt/source/rogerq-mainline-pru-software-support-package"
-	git_branch="upstream/pruss"
-	git_clone_branch
-
-	git_repo="https://github.com/RobertCNelson/dtb-rebuilder.git"
-	git_target_dir="/opt/source/dtb-4.14-ti"
-	git_branch="4.14-ti"
-	git_clone_branch
-
 	git_repo="https://github.com/RobertCNelson/dtb-rebuilder.git"
 	git_target_dir="/opt/source/dtb-4.19-ti"
 	git_branch="4.19-ti"
-	git_clone_branch
+	# git_clone_branch
 
 	git_repo="https://github.com/beagleboard/bb.org-overlays"
 	git_target_dir="/opt/source/bb.org-overlays"
-	git_clone
-
-	git_repo="https://github.com/StrawsonDesign/librobotcontrol"
-	git_target_dir="/opt/source/librobotcontrol"
-	git_clone
-
-	git_repo="https://github.com/mcdeoliveira/rcpy"
-	git_target_dir="/opt/source/rcpy"
-	git_clone
-	if [ -f ${git_target_dir}/.git/config ] ; then
-		cd ${git_target_dir}/
-		if [ -f /usr/bin/python3 ] ; then
-			/usr/bin/python3 setup.py install
-		fi
-	fi
-
-	git_repo="https://github.com/mcdeoliveira/pyctrl"
-	git_target_dir="/opt/source/pyctrl"
-	git_clone
-	if [ -f ${git_target_dir}/.git/config ] ; then
-		cd ${git_target_dir}/
-		if [ -f /usr/bin/python3 ] ; then
-			/usr/bin/python3 setup.py install
-		fi
-	fi
-
-	git_repo="https://github.com/mvduin/py-uio"
-	git_target_dir="/opt/source/py-uio"
-	git_clone
-}
-
-install_go_pkgs () {
-	if [ -f /usr/bin/go ] ; then
-		echo "go env: [`go env`]"
-		echo "go get -d -u gobot.io/x/gobot/..."
-		go get -d -u gobot.io/x/gobot/...
-		chown -R ${rfs_username}:${rfs_username} /home/${rfs_username}/go/
-	fi
+	# git_clone
 }
 
 other_source_links () {
-	rcn_https="https://rcn-ee.com/repos/git/u-boot-patches"
-
-	mkdir -p /opt/source/u-boot_${u_boot_release}/
-	wget --directory-prefix="/opt/source/u-boot_${u_boot_release}/" ${rcn_https}/${u_boot_release}/0001-omap3_beagle-uEnv.txt-bootz-n-fixes.patch
-	wget --directory-prefix="/opt/source/u-boot_${u_boot_release}/" ${rcn_https}/${u_boot_release}/0001-am335x_evm-uEnv.txt-bootz-n-fixes.patch
-	wget --directory-prefix="/opt/source/u-boot_${u_boot_release}/" ${rcn_https}/${u_boot_release}/0002-U-Boot-BeagleBone-Cape-Manager.patch
-	mkdir -p /opt/source/u-boot_${u_boot_release_x15}/
-	wget --directory-prefix="/opt/source/u-boot_${u_boot_release_x15}/" ${rcn_https}/${u_boot_release_x15}/0001-beagle_x15-uEnv.txt-bootz-n-fixes.patch
-	rm /home/${rfs_username}/.wget-hsts || true
-
-	echo "u-boot_${u_boot_release} : /opt/source/u-boot_${u_boot_release}" >> /opt/source/list.txt
-	echo "u-boot_${u_boot_release_x15} : /opt/source/u-boot_${u_boot_release_x15}" >> /opt/source/list.txt
-
+	mkdir -p /opt/source/
+	echo "u-boot url: ${rfs_uboot_source}" >> /opt/source/list.txt
 	chown -R ${rfs_username}:${rfs_username} /opt/source/
 }
 
@@ -315,7 +191,6 @@ if [ -f /usr/bin/git ] ; then
 	git config --global user.email "${rfs_username}@example.com"
 	git config --global user.name "${rfs_username}"
 	install_git_repos
-	install_go_pkgs
 	git config --global --unset-all user.email
 	git config --global --unset-all user.name
 	chown ${rfs_username}:${rfs_username} /home/${rfs_username}/.gitconfig
