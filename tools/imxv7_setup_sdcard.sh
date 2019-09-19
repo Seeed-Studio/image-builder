@@ -996,6 +996,18 @@ kernel_detection () {
 		echo "Debug: image has: v${xenomai_dt_kernel}"
 		has_xenomai_kernel="enable"
 	fi
+
+	unset has_any_arm_kernel
+	unset check
+	check=$(ls "${dir_check}" | grep vmlinuz- | head -n 1)
+	if [ "x${check}" != "x" ] ; then
+		check=$(file ${dir_check}/${check} | sed -nre 's/^.*Linux kernel ARM .*(zImage).*$/\1/p')
+		if [ "x${check}" != "x" ] ; then
+			arm_dt_kernel=$(ls "${dir_check}" | grep vmlinuz- | head -n 1 | awk -F'vmlinuz-' '{print $2}')
+			echo "Debug: image has: v${arm_dt_kernel}"
+			has_any_arm_kernel="enable"
+		fi
+	fi
 }
 
 kernel_select () {
@@ -1050,10 +1062,16 @@ kernel_select () {
 		fi
 	fi
 
+	if [ -z "${select_kernel}" -a "x${conf_kernel}" = "x" ] ; then
+		if [ "x${has_any_arm_kernel}" = "xenable" ] ; then
+			select_kernel="${arm_dt_kernel}"
+		fi
+	fi
+
 	if [ "${select_kernel}" ] ; then
 		echo "Debug: using: v${select_kernel}"
 	else
-		echo "Error: [conf_kernel] not defined [armv7_lpae,armv7,bone,ti]..."
+		echo "Error: [conf_kernel] not defined [armv7_lpae,armv7,bone,ti,stm32]..."
 		exit
 	fi
 }
@@ -1630,7 +1648,7 @@ populate_rootfs () {
 	fi
 
 	if [ ! -f ${TEMPDIR}/disk/opt/scripts/boot/generic-startup.sh ] ; then
-		git clone https://github.com/RobertCNelson/boot-scripts ${TEMPDIR}/disk/opt/scripts/ --depth 1
+		git clone https://github.com/turmary/boot-scripts ${TEMPDIR}/disk/opt/scripts/ --depth 1
 		sudo chown -R 1000:1000 ${TEMPDIR}/disk/opt/scripts/
 	else
 		cd ${TEMPDIR}/disk/opt/scripts/

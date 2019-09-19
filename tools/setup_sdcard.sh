@@ -1053,7 +1053,7 @@ kernel_select () {
 	if [ "${select_kernel}" ] ; then
 		echo "Debug: using: v${select_kernel}"
 	else
-		echo "Error: [conf_kernel] not defined [armv7_lpae,armv7,bone,ti]..."
+		echo "Error: [conf_kernel] not defined [armv7_lpae,armv7,bone,ti,stm32]..."
 		exit
 	fi
 }
@@ -1597,7 +1597,7 @@ populate_rootfs () {
 	fi
 
 	if [ ! -f ${TEMPDIR}/disk/opt/scripts/boot/generic-startup.sh ] ; then
-		git clone https://github.com/RobertCNelson/boot-scripts ${TEMPDIR}/disk/opt/scripts/ --depth 1
+		git clone https://github.com/turmary/boot-scripts ${TEMPDIR}/disk/opt/scripts/ --depth 1
 		sudo chown -R 1000:1000 ${TEMPDIR}/disk/opt/scripts/
 	else
 		cd ${TEMPDIR}/disk/opt/scripts/
