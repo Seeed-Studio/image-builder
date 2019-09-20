@@ -19,6 +19,17 @@ keep_net_alive () {
 	done
 }
 
+kill_net_alive() {
+	[ -e /proc/$KEEP_NET_ALIVE_PID ] && {
+		# TODO
+		# sudo rm -rf ./deploy/ || true
+		sudo kill $KEEP_NET_ALIVE_PID
+	}
+	return 0;
+}
+
+trap "kill_net_alive;" EXIT
+
 build_and_upload_image () {
 	echo "***BUILDING***: ${config_name}: ${target_name}-${image_name}-${size}.img"
 
@@ -83,10 +94,5 @@ options="--img-2gb ${target_name}-${image_name} --hostname stm32mp1 --dtb stm32m
 config_name="seeed-debian-buster-console-v4.19"
 build_and_upload_image
 
-[ -e /proc/$KEEP_NET_ALIVE_PID ] && {
-	# TODO
-	# sudo rm -rf ./deploy/ || true
-	sudo kill $KEEP_NET_ALIVE_PID
-}
-
+kill_net_alive
 
