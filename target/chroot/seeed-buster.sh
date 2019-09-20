@@ -96,6 +96,7 @@ setup_system () {
 	echo "# See securetty(5) and login(1)." >> /etc/securetty
 	echo "" >> /etc/securetty
 	echo "ttySTM0" >> /etc/securetty
+	echo "ttymxc0" >> /etc/securetty
 }
 
 setup_desktop () {

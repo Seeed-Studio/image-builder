@@ -42,8 +42,8 @@ build_and_upload_image () {
 
 	if [ -d ./deploy/${image_name} ] ; then
 		cd ./deploy/${image_name}/
-		echo "debug: [./setup_sdcard.sh ${options}]"
-		sudo ./setup_sdcard.sh ${options}
+		echo "debug: [./stm32mp1_setup_sdcard.sh ${options}]"
+		sudo ./stm32mp1_setup_sdcard.sh ${options}
 
 		if [ -f ${target_name}-${image_name}-${size}.img ] ; then
 			me=`whoami`
