@@ -183,6 +183,25 @@ other_source_links () {
 	chown -R ${rfs_username}:${rfs_username} /opt/source/
 }
 
+unsecure_root () {
+#	root_password=$(cat /etc/shadow | grep root | awk -F ':' '{print $2}')
+#	sed -i -e 's:'$root_password'::g' /etc/shadow
+
+#	if [ -f /etc/ssh/sshd_config ] ; then
+#		#Make ssh root@beaglebone work..
+#		sed -i -e 's:PermitEmptyPasswords no:PermitEmptyPasswords yes:g' /etc/ssh/sshd_config
+#		sed -i -e 's:UsePAM yes:UsePAM no:g' /etc/ssh/sshd_config
+#		#Starting with Jessie:
+#		sed -i -e 's:PermitRootLogin without-password:PermitRootLogin yes:g' /etc/ssh/sshd_config
+#	fi
+
+	if [ -d /etc/sudoers.d/ ] ; then
+		#Don't require password for sudo access
+		echo "${rfs_username} ALL=NOPASSWD: ALL" >/etc/sudoers.d/${rfs_username}
+		chmod 0440 /etc/sudoers.d/${rfs_username}
+	fi
+}
+
 is_this_qemu
 
 setup_system
@@ -197,4 +216,5 @@ if [ -f /usr/bin/git ] ; then
 	chown ${rfs_username}:${rfs_username} /home/${rfs_username}/.gitconfig
 fi
 other_source_links
+unsecure_root
 #
