@@ -31,7 +31,8 @@ kill_net_alive() {
 trap "kill_net_alive;" EXIT
 
 build_and_upload_image () {
-	echo "***BUILDING***: ${config_name}: ${target_name}-${image_name}-${size}.img"
+	full_name=${target_name}-${image_name}-${size}
+	echo "***BUILDING***: ${config_name}: ${full_name}.img"
 
 	# To prevent rebuilding:
 	# export FULL_REBUILD=
@@ -45,28 +46,30 @@ build_and_upload_image () {
 		echo "debug: [./imxv7_setup_sdcard.sh ${options}]"
 		sudo ./imxv7_setup_sdcard.sh ${options}
 
-		if [ -f ${target_name}-${image_name}-${size}.img ] ; then
+		if [ -f ${full_name}.img ] ; then
 			me=`whoami`
-			sudo chown ${me}.${me} ${target_name}-${image_name}-${size}.img
-			if [ -f "${target_name}-${image_name}-${size}.img.xz.job.txt" ]; then
-				sudo chown ${me}.${me} ${target_name}-${image_name}-${size}.img.xz.job.txt
+			sudo chown ${me}.${me} ${full_name}.img
+			if [ -f "${full_name}.img.xz.job.txt" ]; then
+				sudo chown ${me}.${me} ${full_name}.img.xz.job.txt
 			fi
 
 			sync ; sync ; sleep 5
 
-			bmaptool create -o ${target_name}-${image_name}-${size}.bmap ${target_name}-${image_name}-${size}.img
+			bmaptool create -o ${full_name}.bmap ${full_name}.img
 
-			xz -T0 -z -3 -v -v --verbose ${target_name}-${image_name}-${size}.img
-			sha256sum ${target_name}-${image_name}-${size}.img.xz > ${target_name}-${image_name}-${size}.img.xz.sha256sum
+			xz -T0 -k -f -z -3 -v -v --verbose ${full_name}.img || true
+			sha256sum ${full_name}.img.xz > ${full_name}.img.xz.sha256sum
 
 			#upload:
 			ssh ${ssh_user} mkdir -p ${server_dir}
-			rsync -e ssh -av ./${target_name}-${image_name}-${size}.bmap ${ssh_user}:${server_dir}/
-			rsync -e ssh -av ./${target_name}-${image_name}-${size}.img.xz ${ssh_user}:${server_dir}/
-			if [ -f "${target_name}-${image_name}-${size}.img.xz.job.txt" ]; then
-				rsync -e ssh -av ./${target_name}-${image_name}-${size}.img.xz.job.txt ${ssh_user}:${server_dir}/
+			echo "debug: [rsync -e ssh -av ./${full_name}.img.xz ${ssh_user}:${server_dir}/]"
+			rsync -e ssh -av ./${full_name}.bmap ${ssh_user}:${server_dir}/ || true
+			rsync -e ssh -av ./${full_name}.img.xz ${ssh_user}:${server_dir}/ || true
+			if [ -f "${full_name}.img.xz.job.txt" ]; then
+				rsync -e ssh -av ./${full_name}.img.xz.job.txt ${ssh_user}:${server_dir}/ || true
 			fi
-			rsync -e ssh -av ./${target_name}-${image_name}-${size}.img.xz.sha256sum ${ssh_user}:${server_dir}/
+			rsync -e ssh -av ./${full_name}.img.xz.sha256sum ${ssh_user}:${server_dir}/ || true
+			ssh ${ssh_user} "bash -c \"chmod a+r ${server_dir}/${full_name}.*\""
 
 			#cleanup:
 			cd ../../
@@ -74,7 +77,7 @@ build_and_upload_image () {
 			# TODO
 			# sudo rm -rf ./deploy/ || true
 		else
-			echo "***ERROR***: Could not find ${target_name}-${image_name}-${size}.img"
+			echo "***ERROR***: Could not find ${full_name}.img"
 		fi
 	else
 		echo "***ERROR***: Could not find ./deploy/${image_name}"
