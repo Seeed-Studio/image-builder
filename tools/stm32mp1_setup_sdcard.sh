@@ -1348,6 +1348,14 @@ populate_rootfs () {
 	fi
 
 	cd ${TEMPDIR}/disk/
+
+	if [ -f ./opt/scripts/mods/debian-add-sbin-usr-sbin-to-default-path.diff ] ; then
+		if [ -f /usr/bin/patch ] ; then
+			echo "Patching: /etc/profile"
+			patch -p1 < ./opt/scripts/mods/debian-add-sbin-usr-sbin-to-default-path.diff
+		fi
+	fi
+
 	sync
 	sync
 	cd "${DIR}/"
