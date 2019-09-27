@@ -1356,6 +1356,12 @@ populate_rootfs () {
 		fi
 	fi
 
+	# set terminal type
+	echo "export TERM=linux" > ./etc/profile.d/terminal
+
+	# shorter networking timeout
+	sed -i -re 's/^ *TimeoutStartSec=.*/TimeoutStartSec=1sec/g' ./lib/systemd/system/networking.service
+
 	sync
 	sync
 	cd "${DIR}/"
