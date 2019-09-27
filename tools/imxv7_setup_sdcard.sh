@@ -1180,6 +1180,9 @@ populate_rootfs () {
 		if [ "x${uboot_efi_mode}" = "xenable" ] ; then
 			echo "${boot_drive}  /boot/efi vfat defaults 0 0" >> ${wfile}
 		fi
+		if [ ! "x${boot_drive}" = "x${rootfs_drive}" ] ; then
+			echo "${boot_drive}  /boot vfat defaults 0 0" >> ${wfile}
+		fi
 
 		echo "debugfs  /sys/kernel/debug  debugfs  mode=755,uid=root,gid=gpio,defaults  0  0" >> ${wfile}
 
