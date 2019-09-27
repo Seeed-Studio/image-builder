@@ -1226,6 +1226,16 @@ populate_rootfs () {
 				echo "#hwaddress ether DE:AD:BE:EF:CA:FE" >> ${wfile}
 
 				echo "" >> ${wfile}
+				echo "# The secondary network interface" >> ${wfile}
+				if [ "${DISABLE_ETH}" ] ; then
+					echo "#auto eth1" >> ${wfile}
+					echo "#iface eth1 inet dhcp" >> ${wfile}
+				else
+					echo "auto eth1"  >> ${wfile}
+					echo "iface eth1 inet dhcp" >> ${wfile}
+				fi
+
+				echo "" >> ${wfile}
 
 				echo "##connman: ethX static config" >> ${wfile}
 				echo "#connmanctl services" >> ${wfile}
