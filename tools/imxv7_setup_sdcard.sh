@@ -789,10 +789,6 @@ populate_boot () {
 		cp -v "${DIR}/ID.txt" ${TEMPDIR}/disk/ID.txt
 	fi
 
-	if [ "x${conf_board}" = "ximx8mqevk_buildroot" ] ; then
-		touch ${TEMPDIR}/disk/.imx8mq-evk
-	fi
-
 	if [ ${has_uenvtxt} ] ; then
 		cp -v "${DIR}/uEnv.txt" ${TEMPDIR}/disk/uEnv.txt
 		echo "-----------------------------"
@@ -1095,7 +1091,7 @@ populate_rootfs () {
 	echo "#cmdline=${cmdline} overlayroot=tmpfs" >> ${wfile}
 	echo "" >> ${wfile}
 
-	if [ "x${conf_board}" = "xam335x_boneblack" ] || [ "x${conf_board}" = "xam335x_evm" ] || [ "x${conf_board}" = "xam335x_blank_bbbw" ] ; then
+	if [ ! "x${conf_board}" = "x" ] ; then
 		if [ ! "x${has_post_uenvtxt}" = "x" ] ; then
 			cat "${DIR}/post-uEnv.txt" >> ${wfile}
 			echo "" >> ${wfile}
@@ -1110,9 +1106,6 @@ populate_rootfs () {
 		elif [ "x${emmc_flasher}" = "xenable" ] ; then
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
 			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh" >> ${wfile}
-		elif [ "x${a335_flasher}" = "xenable" ] ; then
-			echo "##enable a335: eeprom Flasher:" >> ${wfile}
-			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-a335.sh" >> ${wfile}
 		else
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
 			echo "##make sure, these tools are installed: dosfstools rsync" >> ${wfile}
@@ -1129,18 +1122,10 @@ populate_rootfs () {
 		elif [ "x${emmc_flasher}" = "xenable" ] ; then
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
 			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-no-eeprom.sh" >> ${wfile}
-		elif [ "x${a335_flasher}" = "xenable" ] ; then
-			echo "##enable a335: eeprom Flasher:" >> ${wfile}
-			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-a335.sh" >> ${wfile}
 		fi
 	fi
 
-	#am335x_boneblack is a custom u-boot to ignore empty factory eeproms...
-	if [ "x${conf_board}" = "xam335x_boneblack" ] ; then
-		board="am335x_evm"
-	else
-		board=${conf_board}
-	fi
+	board=${conf_board}
 
 	echo "/boot/uEnv.txt---------------"
 	cat ${wfile}
@@ -1301,21 +1286,6 @@ populate_rootfs () {
 		git pull
 		cd -
 		sudo chown -R 1000:1000 ${TEMPDIR}/disk/opt/scripts/
-	fi
-
-	if [ "x${drm}" = "xomapdrm" ] ; then
-		wfile="/etc/X11/xorg.conf"
-		if [ -f ${TEMPDIR}/disk${wfile} ] ; then
-			sudo sed -i -e 's:modesetting:omap:g' ${TEMPDIR}/disk${wfile}
-			sudo sed -i -e 's:fbdev:omap:g' ${TEMPDIR}/disk${wfile}
-
-			if [ "x${conf_board}" = "xomap3_beagle" ] ; then
-				sudo sed -i -e 's:#HWcursor_false::g' ${TEMPDIR}/disk${wfile}
-				sudo sed -i -e 's:#DefaultDepth::g' ${TEMPDIR}/disk${wfile}
-			else
-				sudo sed -i -e 's:#HWcursor_false::g' ${TEMPDIR}/disk${wfile}
-			fi
-		fi
 	fi
 
 	if [ "x${drm}" = "xetnaviv" ] ; then
@@ -1637,11 +1607,6 @@ while [ ! -z "$1" ] ; do
 		;;
 	--use-beta-bootloader)
 		USE_BETA_BOOTLOADER=1
-		;;
-	--a335-flasher)
-		oem_blank_eeprom="enable"
-		a335_flasher="enable"
-		uboot_eeprom="bbb_blank"
 		;;
 	--bbb-usb-flasher|--usb-flasher|--oem-flasher)
 		oem_blank_eeprom="enable"
