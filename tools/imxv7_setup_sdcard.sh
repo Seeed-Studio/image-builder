@@ -259,7 +259,11 @@ generate_soc () {
 			echo "dd_spl_uboot_conf=${dd_spl_uboot_conf}" >> ${wfile}
 		fi
 		echo "dd_spl_uboot_bs=${dd_spl_uboot_bs}" >> ${wfile}
-		echo "dd_spl_uboot_backup=/opt/backup/uboot/${spl_uboot_name}" >> ${wfile}
+		if [ ! "x${spl_uboot_name}" = "x" ] ; then
+			echo "dd_spl_uboot_backup=/opt/backup/uboot/${spl_uboot_name}" >> ${wfile}
+		else
+			echo "dd_spl_uboot_backup=" >> ${wfile}
+		fi
 		echo "" >> ${wfile}
 		echo "dd_uboot_count=${dd_uboot_count}" >> ${wfile}
 		echo "dd_uboot_seek=${dd_uboot_seek}" >> ${wfile}
@@ -1106,10 +1110,16 @@ populate_rootfs () {
 		elif [ "x${emmc_flasher}" = "xenable" ] ; then
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
 			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh" >> ${wfile}
+			echo "" >> ${wfile}
+			echo "##if eMMC boot failed, disable eMMC specific boot method" >> ${wfile}
+			echo "uenvcmd=mmc partconf 1 0 0 0" >> ${wfile}
 		else
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
 			echo "##make sure, these tools are installed: dosfstools rsync" >> ${wfile}
 			echo "#cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh" >> ${wfile}
+			echo "" >> ${wfile}
+			echo "##if eMMC boot failed, disable eMMC specific boot method" >> ${wfile}
+			echo "#uenvcmd=mmc partconf 1 0 0 0" >> ${wfile}
 		fi
 		echo "" >> ${wfile}
 	else
