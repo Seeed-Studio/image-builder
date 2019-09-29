@@ -1240,6 +1240,11 @@ if [ "x${include_firmware}" = "xenable" ] ; then
 	if [ -f "${DIR}/git/linux-firmware/mt7601u.bin" ] ; then
 		sudo cp "${DIR}/git/linux-firmware/mt7601u.bin" "${tempdir}/lib/firmware/mt7601u.bin"
 	fi
+
+	if [ -d "${DIR}/git/linux-firmware/imx/sdma" ] ; then
+		sudo mkdir -p "${tempdir}/lib/firmware/imx/sdma"
+		sudo cp "${DIR}"/git/linux-firmware/imx/sdma/* "${tempdir}/lib/firmware/imx/sdma"
+	fi
 fi
 
 if [ "x${repo_rcnee_sgx}" = "xenable" ] ; then
