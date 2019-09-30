@@ -98,7 +98,7 @@ options="${options} --enable-uboot-cape-overlays --force-device-tree imx6ull-see
 
 config_name="seeed-imx-debian-buster-console-v4.19"
 # using temperary bootloader
-options="${options} --bootloader /home/pi/packages/u-boot/u-boot-dtb.imx"
+# options="${options} --bootloader /home/pi/packages/u-boot/u-boot-dtb.imx"
 build_and_upload_image
 
 ##Ubuntu 18.04
