@@ -1144,6 +1144,13 @@ populate_rootfs () {
 	wfile="${TEMPDIR}/disk/boot/SOC.sh"
 	generate_soc
 
+	# don't change files in boot partition from now on.
+	if [ ! "x${media_boot_partition}" = "x${media_rootfs_partition}" ] ; then
+		sync
+		sync
+		umount ${TEMPDIR}/disk/boot || true
+	fi
+
 	#RootStock-NG
 	if [ -f ${TEMPDIR}/disk/etc/rcn-ee.conf ] ; then
 		. ${TEMPDIR}/disk/etc/rcn-ee.conf
@@ -1319,7 +1326,7 @@ populate_rootfs () {
 	fi
 
 	if [ ! "x${new_hostname}" = "x" ] ; then
-		echo "Updating Image hostname too: [${new_hostname}]"
+		echo "Updating Image hostname to: [${new_hostname}]"
 
 		wfile="/etc/hosts"
 		echo "127.0.0.1	localhost" > ${TEMPDIR}/disk${wfile}
@@ -1358,10 +1365,6 @@ populate_rootfs () {
 	sync
 	sync
 	cd "${DIR}/"
-
-	if [ ! "x${media_boot_partition}" = "x${media_rootfs_partition}" ] ; then
-		umount ${TEMPDIR}/disk/boot || true
-	fi
 
 	if [ "x${option_ro_root}" = "xenable" ] ; then
 		umount ${TEMPDIR}/disk/var || true
