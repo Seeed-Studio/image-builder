@@ -1352,6 +1352,9 @@ populate_rootfs () {
 	# shorter networking timeout
 	sed -i -re 's/^ *TimeoutStartSec=.*/TimeoutStartSec=1sec/g' ./lib/systemd/system/networking.service
 
+	echo "RuntimeWatchdogSec=30" >> ./etc/systemd/system.conf
+	echo "ShutdownWatchdogSec=5min" >> ./etc/systemd/system.conf
+
 	sync
 	sync
 	cd "${DIR}/"
