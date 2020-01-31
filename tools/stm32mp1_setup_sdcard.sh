@@ -1358,6 +1358,9 @@ populate_rootfs () {
 		echo "${SERIAL}"
 	} >> ./etc/securetty
 
+	# Using module bcmdhd, not module brcmfmac
+	echo blacklist brcmfmac > ./etc/modprobe.d/blacklist-ap6xxx.conf
+
 	echo "RuntimeWatchdogSec=30" >> ./etc/systemd/system.conf
 	echo "ShutdownWatchdogSec=5min" >> ./etc/systemd/system.conf
 
