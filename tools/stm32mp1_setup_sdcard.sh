@@ -1352,6 +1352,12 @@ populate_rootfs () {
 	# shorter networking timeout
 	sed -i -re 's/^ *TimeoutStartSec=.*/TimeoutStartSec=1sec/g' ./lib/systemd/system/networking.service
 
+	# stm32mp1 securetty
+	{
+		echo "# ST stm32 ports"
+		echo "${SERIAL}"
+	} >> ./etc/securetty
+
 	echo "RuntimeWatchdogSec=30" >> ./etc/systemd/system.conf
 	echo "ShutdownWatchdogSec=5min" >> ./etc/systemd/system.conf
 
