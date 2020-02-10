@@ -94,7 +94,7 @@ image_name="debian-buster-console-armhf-${time}"
 size="2gb"
 target_name="stm32mp1"
 options="--img-2gb ${target_name}-${image_name} --dtb stm32mp1 --force-device-tree stm32mp1-seeed-npi-base.dtb --enable-uboot-cape-overlays"
-config_name="seeed-debian-buster-console-v4.19"
+config_name="seeed-stm32mp1-debian-buster-console-v4.19"
 build_and_upload_image
 
 kill_net_alive
