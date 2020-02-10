@@ -1109,17 +1109,13 @@ populate_rootfs () {
 			fi
 		elif [ "x${emmc_flasher}" = "xenable" ] ; then
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
-			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh" >> ${wfile}
+			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-stm32mp1.sh" >> ${wfile}
 			echo "" >> ${wfile}
-			echo "##if eMMC boot failed, disable eMMC specific boot method" >> ${wfile}
-			echo "uenvcmd=mmc partconf 1 0 0 0" >> ${wfile}
 		else
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
 			echo "##make sure, these tools are installed: dosfstools rsync" >> ${wfile}
-			echo "#cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3.sh" >> ${wfile}
+			echo "#cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-stm32mp1.sh" >> ${wfile}
 			echo "" >> ${wfile}
-			echo "##if eMMC boot failed, disable eMMC specific boot method" >> ${wfile}
-			echo "#uenvcmd=mmc partconf 1 0 0 0" >> ${wfile}
 		fi
 		echo "" >> ${wfile}
 	else
@@ -1131,7 +1127,7 @@ populate_rootfs () {
 			fi
 		elif [ "x${emmc_flasher}" = "xenable" ] ; then
 			echo "##enable Generic eMMC Flasher:" >> ${wfile}
-			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-no-eeprom.sh" >> ${wfile}
+			echo "cmdline=init=/opt/scripts/tools/eMMC/init-eMMC-flasher-v3-stm32mp1.sh" >> ${wfile}
 		fi
 	fi
 
