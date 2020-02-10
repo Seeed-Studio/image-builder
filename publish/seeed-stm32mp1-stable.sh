@@ -93,7 +93,7 @@ echo "pid: [${KEEP_NET_ALIVE_PID}]"
 image_name="debian-buster-console-armhf-${time}"
 size="2gb"
 target_name="stm32mp1"
-options="--img-2gb ${target_name}-${image_name} --dtb stm32mp1"
+options="--img-2gb ${target_name}-${image_name} --dtb stm32mp1 --force-device-tree stm32mp1-seeed-npi-base.dtb --enable-uboot-cape-overlays"
 config_name="seeed-debian-buster-console-v4.19"
 build_and_upload_image
 
