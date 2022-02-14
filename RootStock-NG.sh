@@ -47,14 +47,14 @@ check_project_config () {
 
 	time=$(date +%Y-%m-%d)
 
-	#/config/${project_config}.conf
+	#${project_config}.conf
 	unset leading_slash
 	leading_slash=$(echo ${project_config} | grep "/" || unset leading_slash)
 	if [ "${leading_slash}" ] ; then
 		project_config=$(echo "${leading_slash##*/}")
 	fi
 
-	#${project_config}.conf
+	#/config/${project_config}.conf
 	project_config=$(echo ${project_config} | awk -F ".conf" '{print $1}')
 	if [ -f ${DIR}/configs/${project_config}.conf ] ; then
 		. <(m4 -P ${DIR}/configs/${project_config}.conf)
