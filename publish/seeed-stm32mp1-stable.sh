@@ -11,6 +11,7 @@ server_dir="/home/public/share/stm32mp1"
 this_name=$0
 
 #export apt_proxy=localhost:3142/
+export apt_proxy=192.168.4.40:3142/
 
 keep_net_alive () {
 	while : ; do
