@@ -14,8 +14,8 @@ rev=$(git rev-parse HEAD)
 branch=$(git describe --contains --all HEAD)
 this_name=$0
 
-#export apt_proxy=localhost:3142/
-export apt_proxy=192.168.4.40:3142/
+# Use outer net 
+# export apt_proxy=localhost:3142/
 
 keep_net_alive () {
 	while : ; do
@@ -43,14 +43,13 @@ build_and_upload_image () {
 	# export FULL_REBUILD=
 	FULL_REBUILD=${FULL_REBUILD-1}
 	if [ -n "${FULL_REBUILD}" -o ! -e "deploy/${image_name}.tar" ]; then
-		echo "./RootStock-NG.sh -c ${config_name}"
 		./RootStock-NG.sh -c ${config_name}
 	fi
 
 	if [ -d ./deploy/${image_name} ] ; then
 		cd ./deploy/${image_name}/
-		echo "debug: [./stm32mp1_setup_sdcard.sh ${options}]"
-		sudo ./stm32mp1_setup_sdcard.sh ${options}
+		echo "debug: [./stm32mp135_setup_sdcard.sh ${options}]"
+		sudo ./stm32mp135_setup_sdcard.sh ${options}
 
 		if [ -f ${full_name}.img ] ; then
 			me=`whoami`
@@ -79,7 +78,6 @@ build_and_upload_image () {
 			rsync -e ssh -av ./${full_name}.img.xz.sha256sum ${ssh_user}:${server_dir}/ || true
 			ssh ${ssh_user} "bash -c \"chmod a+r ${server_dir}/${full_name}.*\""
 COMMENT
-
 			#cleanup:
 			cd ../../
 
@@ -103,7 +101,7 @@ image_name="debian-buster-console-armhf-${time}"
 size="2gb"
 target_name="stm32mp135"
 options="--img-2gb ${target_name}-${image_name} --dtb stm32mp135 --force-device-tree stm32mp135f-dk.dtb --enable-uboot-cape-overlays"
-config_name="seeed-stm32mp1-debian-buster-console-v4.19"
+config_name="seeed-stm32mp135-debian-buster-console-v5.10"
 build_and_upload_image
 
 kill_net_alive

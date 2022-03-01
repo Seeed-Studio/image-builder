@@ -823,10 +823,10 @@ function flashlayout_and_bootloader() {
 
 	read_flash_layout
 	get_last_image_path
-	debug "DUMP FlashLayout name:      $FLASHLAYOUT_filename"
-	debug "DUMP FlashLayout dir path:  $FLASHLAYOUT_filename_path"
-	debug "DUMP images dir path:       $FLASHLAYOUT_prefix_image_path"
-	debug "DUMP RAW SDCARD image name: $FLASHLAYOUT_rawname"
+	echo "DUMP FlashLayout name:      $FLASHLAYOUT_filename"
+	echo "DUMP FlashLayout dir path:  $FLASHLAYOUT_filename_path"
+	echo "DUMP images dir path:       $FLASHLAYOUT_prefix_image_path"
+	echo "DUMP RAW SDCARD image name: $FLASHLAYOUT_rawname"
 
 	generate_gpt_partition_table_from_flash_layout
 	populate_gpt_partition_table_from_flash_layout
