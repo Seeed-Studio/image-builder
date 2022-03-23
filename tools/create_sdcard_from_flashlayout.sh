@@ -67,6 +67,8 @@ COL_BIN2BOOT=7
 
 WARNING_TEXT=""
 
+DEBUG=1
+
 usage() {
 	echo "Usage: $0 <flashlayout>"
 	exit 0
