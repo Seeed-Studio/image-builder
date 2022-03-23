@@ -819,13 +819,12 @@ populate_boot () {
 }
 
 kernel_detection () {
-	echo "----------- kernel_detection -----------"
 	unset has_multi_armv7_kernel
 	unset check
 	check=$(ls "${dir_check}" | grep vmlinuz- | grep armv7 | grep -v lpae | head -n 1)
 	if [ "x${check}" != "x" ] ; then
 		armv7_kernel=$(ls "${dir_check}" | grep vmlinuz- | grep armv7 | grep -v lpae | head -n 1 | awk -F'vmlinuz-' '{print $2}')
-		echo "Debug: image has armv7_kernel: ${armv7_kernel}"
+		echo "Debug: image has: v${armv7_kernel}"
 		has_multi_armv7_kernel="enable"
 	fi
 
@@ -834,7 +833,7 @@ kernel_detection () {
 	check=$(ls "${dir_check}" | grep vmlinuz- | grep armv7 | grep lpae | head -n 1)
 	if [ "x${check}" != "x" ] ; then
 		armv7_lpae_kernel=$(ls "${dir_check}" | grep vmlinuz- | grep armv7 | grep lpae | head -n 1 | awk -F'vmlinuz-' '{print $2}')
-		echo "Debug: image has armv7_lpae_kernel: ${armv7_lpae_kernel}"
+		echo "Debug: image has: v${armv7_lpae_kernel}"
 		has_multi_armv7_lpae_kernel="enable"
 	fi
 
@@ -845,7 +844,7 @@ kernel_detection () {
 		check=$(file ${dir_check}/${check} | sed -nre 's/^.*Linux kernel ARM .*(zImage).*$/\1/p')
 		if [ "x${check}" != "x" ] ; then
 			arm_dt_kernel=$(ls "${dir_check}" | grep vmlinuz- | head -n 1 | awk -F'vmlinuz-' '{print $2}')
-			echo "Debug: image has arm_dt_kernel: ${arm_dt_kernel}"
+			echo "Debug: image has: v${arm_dt_kernel}"
 			has_any_arm_kernel="enable"
 		fi
 	fi
@@ -1399,7 +1398,7 @@ populate_rootfs () {
 
 check_mmc () {
 	FDISK=$(LC_ALL=C fdisk -l 2>/dev/null | grep "Disk ${media}:" | awk '{print $2}')
-	echo "----------- check_mmc: ${media} -----------"
+
 	if [ "x${FDISK}" = "x${media}:" ] ; then
 		echo ""
 		echo "I see..."
@@ -1430,7 +1429,7 @@ process_dtb_conf () {
 		show_board_warning
 	fi
 
-	echo "----------- process_dtb_conf -----------"
+	echo "-----------------------------"
 
 	#defaults, if not set...
 	case "${bootloader_location}" in
@@ -1476,7 +1475,6 @@ check_dtb_board () {
 
 	# ${dtb_board}.conf
 	unset leading_slash
-	echo "----------- check_dtb_board: ${dtb_board} -----------"
 	leading_slash=$(echo ${dtb_board} | grep "/" || unset leading_slash)
 	if [ "${leading_slash}" ] ; then
 		dtb_board=$(echo "${leading_slash##*/}")
