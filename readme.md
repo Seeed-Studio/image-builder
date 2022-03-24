@@ -14,3 +14,15 @@ Checkout this [documents](https://github.com/beagleboard/image-builder/blob/mast
 
 known issues:
 1. USB TYPE-C connection failed if it is not the first time since bootup.
+
+
+## Usage
+* STM32MP157
+    ```sh
+        ./publish/seeed-stm32mp1-stable.sh
+    ```
+
+* STM32MP157
+    ```sh
+        ./publish/seeed-stm32mp135-stable.sh
+    ```
